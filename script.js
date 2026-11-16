@@ -46,16 +46,20 @@
 
         console.log("Formatting document for PDF export...");
 
-        document.head.innerHTML = `
-      <style>
-        @media print { 
-          @page { margin: 0; }
-          body { margin: 0; } 
-          img { width: 100%; height: 100%; object-fit: contain; page-break-after: always; break-after: page; } 
-        }
-      </style>`;
+        const styleEl = document.createElement('style');
+        styleEl.textContent = `
+      @media print { 
+        @page { margin: 0; }
+        body { margin: 0; } 
+        img { width: 100%; height: 100%; object-fit: contain; page-break-after: always; break-after: page; } 
+      }
+    `;
+        document.head.appendChild(styleEl);
 
-        document.body.innerHTML = '';
+        while (document.body.firstChild) {
+            document.body.removeChild(document.body.firstChild);
+        }
+
         document.body.style.backgroundColor = '#525659';
         document.body.style.margin = '0';
         document.body.style.display = 'flex';
@@ -73,7 +77,7 @@
 
         setTimeout(() => {
             window.print();
-            console.log("Refresh this page to restore the standard Google Drive viewer.");
+            console.log("Refresh this page to restore the standard viewer.");
         }, 1000);
 
     } catch (e) {
