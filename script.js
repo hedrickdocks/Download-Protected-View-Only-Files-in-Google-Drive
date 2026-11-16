@@ -31,23 +31,51 @@
     };
 
     try {
-        let count = 1;
+        console.log("Extracting pages... Please wait.");
+        const imageUrls = [];
+
         for (const page of getPages()) {
             const img = await getImage(page);
             const canvas = document.createElement('canvas');
             canvas.width = img.naturalWidth;
             canvas.height = img.naturalHeight;
             canvas.getContext("2d").drawImage(img, 0, 0);
-
-            const a = document.createElement('a');
-            a.href = canvas.toDataURL("image/jpeg", 1.0);
-            a.download = `page_${count.toString().padStart(3, '0')}.jpg`;
-            a.click();
-
-            await new Promise(r => setTimeout(r, 750));
-            count++;
+            imageUrls.push(canvas.toDataURL("image/jpeg", 1.0));
+            await new Promise(r => setTimeout(r, 400));
         }
-        console.log("Finished downloading all pages.");
+
+        console.log("Formatting document for PDF export...");
+
+        document.head.innerHTML = `
+      <style>
+        @media print { 
+          @page { margin: 0; }
+          body { margin: 0; } 
+          img { width: 100%; height: 100%; object-fit: contain; page-break-after: always; break-after: page; } 
+        }
+      </style>`;
+
+        document.body.innerHTML = '';
+        document.body.style.backgroundColor = '#525659';
+        document.body.style.margin = '0';
+        document.body.style.display = 'flex';
+        document.body.style.flexDirection = 'column';
+        document.body.style.alignItems = 'center';
+
+        imageUrls.forEach(url => {
+            const img = document.createElement('img');
+            img.src = url;
+            img.style.maxWidth = '100%';
+            img.style.marginBottom = '10px';
+            img.style.boxShadow = '0 2px 6px rgba(0,0,0,0.5)';
+            document.body.appendChild(img);
+        });
+
+        setTimeout(() => {
+            window.print();
+            console.log("Refresh this page to restore the standard Google Drive viewer.");
+        }, 1000);
+
     } catch (e) {
         console.error(e);
         alert(e.message);
