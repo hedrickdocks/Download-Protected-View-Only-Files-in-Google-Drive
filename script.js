@@ -33,9 +33,17 @@
     try {
         console.log("Extracting pages... Please wait.");
         const imageUrls = [];
+        let docWidth = 0;
+        let docHeight = 0;
 
         for (const page of getPages()) {
             const img = await getImage(page);
+
+            if (docWidth === 0) {
+                docWidth = img.naturalWidth;
+                docHeight = img.naturalHeight;
+            }
+
             const canvas = document.createElement('canvas');
             canvas.width = img.naturalWidth;
             canvas.height = img.naturalHeight;
@@ -49,9 +57,24 @@
         const styleEl = document.createElement('style');
         styleEl.textContent = `
       @media print { 
-        @page { margin: 0; }
-        body { margin: 0; } 
-        img { width: 100%; height: 100%; object-fit: contain; page-break-after: always; break-after: page; } 
+        @page { 
+          margin: 0; 
+          size: ${docWidth}px ${docHeight}px; /* Forces PDF to exactly match image dimensions */
+        }
+        body { 
+          margin: 0; 
+          padding: 0; 
+          background: white; 
+        } 
+        img { 
+          width: ${docWidth}px; 
+          height: ${docHeight}px; 
+          display: block; 
+          margin: 0; 
+          padding: 0;
+          page-break-after: always; 
+          break-after: page; 
+        } 
       }
     `;
         document.head.appendChild(styleEl);
@@ -69,7 +92,8 @@
         imageUrls.forEach(url => {
             const img = document.createElement('img');
             img.src = url;
-            img.style.maxWidth = '100%';
+            img.style.width = '100%';
+            img.style.maxWidth = `${docWidth}px`;
             img.style.marginBottom = '10px';
             img.style.boxShadow = '0 2px 6px rgba(0,0,0,0.5)';
             document.body.appendChild(img);
